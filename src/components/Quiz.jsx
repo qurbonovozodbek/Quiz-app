@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const quizQuestions = {
   Football: [
@@ -627,6 +627,47 @@ const Quiz = ({ category, questionCount, finishQuiz }) => {
   const [score, setScore] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(null);
+
+  useEffect(() => {
+    console.log('dd');
+    console.log(questionCount);
+    
+    
+    let initialTime;
+    if (questionCount == 10) {
+      console.log('a');
+      
+      initialTime = 3 * 60;
+    } else if (questionCount == 20) {
+      console.log('b');
+      initialTime = 5 * 60;
+    } else if (questionCount == 30) {
+      console.log('c');
+      initialTime = 7 * 60;
+    }
+
+    setTimeLeft(initialTime);
+
+    const timerInterval = setInterval(() => {
+      setTimeLeft((prevTime) => {
+        if (prevTime === 0) {
+          clearInterval(timerInterval);
+          finishQuiz(score);
+        } else if (prevTime !== null) {
+          return prevTime - 1;
+        }
+      });
+    }, 1000);
+
+    return () => clearInterval(timerInterval);
+  }, [questionCount, finishQuiz]);
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+  };
 
   const handleAnswerClick = (option) => {
     setSelectedOption(option);
@@ -651,6 +692,9 @@ const Quiz = ({ category, questionCount, finishQuiz }) => {
   return (
     <div className="quiz-container">
       <h2>{category} Quiz</h2>
+      <div className="timer">
+        Time Left: {timeLeft !== null ? formatTime(timeLeft) : "Calculating..."}
+      </div>
       <div className="question-section">
         <h3>{quizQuestions[category][currentQuestion].question}</h3>
         <div className="option">
